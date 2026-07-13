@@ -1,4 +1,7 @@
-const GAMEFLOW_API_URL = "https://dev.api.gameflow.gg/v1";
+// Base URL of the GameFlow REST gateway. Defaults to the dev environment; set
+// GAMEFLOW_API_URL to point at a local gateway (e.g. http://localhost:5001/v1).
+export const GAMEFLOW_API_URL =
+  Deno.env.get("GAMEFLOW_API_URL") ?? "https://dev.api.gameflow.gg/v1";
 
 export interface GameServerAllocation {
   address: string;

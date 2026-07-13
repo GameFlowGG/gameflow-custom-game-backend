@@ -11,6 +11,11 @@ import {
   deleteSession,
 } from "../utils/lobby.ts";
 import { startGameServer } from "../utils/gameflow.ts";
+import {
+  cancelSearchOnDisconnect,
+  handleMatchmakingCancel,
+  handleMatchmakingFind,
+} from "./matchmaking.ts";
 
 const connections = new Map<string, WebSocket>();
 const lobbySubscriptions = new Map<string, Set<string>>();
@@ -68,6 +73,14 @@ export async function handleMessage(
         await handleLobbyFillBots(peerId, socket, session);
         break;
 
+      case "matchmaking:find":
+        await handleMatchmakingFind(peerId, socket, session);
+        break;
+
+      case "matchmaking:cancel":
+        handleMatchmakingCancel(peerId, socket);
+        break;
+
       default:
         socket.send(
           JSON.stringify({ type: "error", message: "Unknown message type" })
@@ -82,6 +95,10 @@ export async function handleMessage(
 
 export async function handleDisconnect(peerId: string): Promise<void> {
   const session = (await getSession(peerId)) as Session | null;
+
+  // Stop any in-flight matchmaking search for this peer and drop its ticket so
+  // it does not linger as an orphan in the queue.
+  await cancelSearchOnDisconnect(peerId);
 
   if (session?.lobbyId) {
     const lobby = await getLobby(session.lobbyId);
@@ -136,7 +153,7 @@ async function handleLobbyCreate(
 
   await saveLobby(lobby);
   console.log(
-    `Lobby created - ID: ${lobbyId}, Code: ${code}, isPrivate: ${lobby.isPrivate}, Owner: ${session.username}`
+    `🎮 Lobby created - ID: ${lobbyId}, Code: ${code}, isPrivate: ${lobby.isPrivate}, Owner: ${session.username}`
   );
 
   session.lobbyId = lobbyId;
@@ -409,7 +426,7 @@ async function handleLobbyFillBots(
     return;
   }
 
-  console.error(`Adding bots to lobby ${lobby.id}. Current: Team A=${lobby.teamA.length}, Team B=${lobby.teamB.length}`);
+  console.log(`Adding bots to lobby ${lobby.id}. Current: Team A=${lobby.teamA.length}, Team B=${lobby.teamB.length}`);
 
   let botNumber = 1;
   while (lobby.teamA.length < 2) {

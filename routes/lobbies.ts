@@ -2,7 +2,7 @@ import { requireAuth } from "../utils/auth.ts";
 import { getAllPublicLobbies } from "../utils/lobby.ts";
 
 export async function handleGetLobbies(request: Request): Promise<Response> {
-  console.log("🔍 GET /lobbies - Request received");
+  console.log("GET /lobbies - Request received");
   
   try {
     await requireAuth(request.headers);
