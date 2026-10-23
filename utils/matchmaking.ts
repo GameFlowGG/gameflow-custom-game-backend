@@ -90,7 +90,7 @@ export async function createTicket(player: MatchmakingPlayer): Promise<string> {
       player_id: player.accountId,
       game_id: gameId,
       game_mode: gameMode(),
-      preferred_az: region(),
+      preferred_region: region(),
       mu: DEFAULT_MU,
       sigma: DEFAULT_SIGMA,
       rating_bucket: 0,
